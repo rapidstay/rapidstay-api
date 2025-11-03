@@ -1,30 +1,30 @@
 # ----------------------------------------------------
-# 1️⃣ Build Stage (Gradle Wrapper 기반)
+# 1️⃣ Build Stage
 # ----------------------------------------------------
 FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /app
 
-# Gradle Wrapper 및 설정 복사
+# gradle wrapper 전체를 반드시 복사
 COPY gradlew .
 COPY gradle gradle
+COPY gradle/wrapper gradle/wrapper
+
+# gradle 실행권한 부여
+RUN chmod +x gradlew
+
+# 소스 복사
 COPY build.gradle .
 COPY settings.gradle .
 COPY src src
 
-# Gradle wrapper 실행권한 부여 후 빌드
-RUN chmod +x gradlew && ./gradlew clean bootJar -x test
+# 빌드 수행 (테스트 제외)
+RUN ./gradlew --no-daemon clean bootJar -x test
 
 # ----------------------------------------------------
-# 2️⃣ Runtime Stage (경량 JRE 환경)
+# 2️⃣ Runtime Stage
 # ----------------------------------------------------
 FROM eclipse-temurin:21-jre
 WORKDIR /app
-
-# 빌드된 jar 복사
 COPY --from=builder /app/build/libs/*.jar app.jar
-
-# 포트 노출 (API 포트 8081)
 EXPOSE 8081
-
-# 애플리케이션 실행
 ENTRYPOINT ["java", "-jar", "app.jar"]
