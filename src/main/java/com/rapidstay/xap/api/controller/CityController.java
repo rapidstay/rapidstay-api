@@ -1,7 +1,7 @@
 package com.rapidstay.xap.api.controller;
 
 import com.rapidstay.xap.api.service.CityService;
-import com.rapidstay.xap.common.dto.CityDTO;
+import com.rapidstay.xap.api.common.dto.CityDTO;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

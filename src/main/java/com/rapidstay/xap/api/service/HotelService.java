@@ -5,7 +5,7 @@ import com.rapidstay.xap.api.dto.HotelDetailResponse;
 import com.rapidstay.xap.api.dto.HotelResponse;
 import com.rapidstay.xap.api.dto.HotelSearchRequest;
 import com.rapidstay.xap.api.dto.PagedResult;
-import com.rapidstay.xap.common.dto.CityDTO;
+import com.rapidstay.xap.api.common.dto.CityDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,6 @@
 plugins {
-    id 'org.springframework.boot'
-    id 'io.spring.dependency-management'
+    id 'org.springframework.boot' version '3.3.4'
+    id 'io.spring.dependency-management' version '1.1.6'
     id 'java'
 }
 
@@ -13,32 +13,35 @@ repositories {
 }
 
 dependencies {
+    // ✅ 공통 모듈 (common.jar 직접 포함)
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
+    // ✅ Spring 기본 구성
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 
+    // ✅ PostgreSQL (운영용)
+    runtimeOnly 'org.postgresql:postgresql:42.7.3'
+
+    // ✅ Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    runtimeOnly 'com.h2database:h2'
-    runtimeOnly 'mysql:mysql-connector-java:8.0.33'
-
+    // ✅ Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
     sourceSets {
         main {
-            java {
-                srcDirs = ['src/main/java']
-            }
-            resources {
-                srcDirs = ['src/main/resources']
-            }
+            java.srcDirs = ['src/main/java']
+            resources.srcDirs = ['src/main/resources']
         }
     }
 }

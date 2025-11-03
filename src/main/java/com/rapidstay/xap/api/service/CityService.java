@@ -3,12 +3,11 @@ package com.rapidstay.xap.api.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rapidstay.xap.api.client.CityInfoClient;
-import com.rapidstay.xap.common.dto.CityDTO;
-import com.rapidstay.xap.common.entity.CityInsight;
-import com.rapidstay.xap.common.repository.CityInsightRepository;
+import com.rapidstay.xap.api.common.dto.CityDTO;
+import com.rapidstay.xap.api.common.entity.CityInsight;
+import com.rapidstay.xap.api.common.repository.CityInsightRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -39,8 +38,7 @@ public class CityService {
             if (json != null && !json.isBlank()) {
                 System.out.println("🧠 [Redis] city:list 존재함, 길이: " + json.length());
 
-                List<CityDTO> cachedList = new ObjectMapper()
-                        .readValue(json, new com.fasterxml.jackson.core.type.TypeReference<List<CityDTO>>() {});
+                List<CityDTO> cachedList = objectMapper.readValue(json, new TypeReference<List<CityDTO>>() {});
 
                 List<Map<String, Object>> results = cachedList.stream()
                         .filter(c ->
@@ -85,20 +83,37 @@ public class CityService {
         return dbResults;
     }
 
-    /** 🧭 Redis + DB 조회 */
+    /** 🧭 Redis + DB 조회 (데이터 없을 때 빈 DTO 반환) */
     public CityDTO getCityInfo(String cityName) {
         if (cityName == null || cityName.isBlank()) {
-            throw new IllegalArgumentException("City name is required");
+            return CityDTO.builder()
+                    .cityName("")
+                    .error("City name is required")
+                    .build();
         }
+
         String key = "city:" + cityName.toLowerCase();
 
         // 1️⃣ 캐시 확인
-        CityDTO cached = redisTemplate.opsForValue().get(key);
-        if (cached != null) return cached;
+        try {
+            CityDTO cached = redisTemplate.opsForValue().get(key);
+            if (cached != null) return cached;
+        } catch (Exception e) {
+            System.err.println("⚠️ [Redis 조회 실패] " + e.getMessage());
+        }
 
         // 2️⃣ DB 조회
-        CityInsight entity = cityInsightRepository.findByCityNameIgnoreCase(cityName)
-                .orElseThrow(() -> new RuntimeException("City not found: " + cityName));
+        Optional<CityInsight> optionalEntity = cityInsightRepository.findByCityNameIgnoreCase(cityName);
+
+        if (optionalEntity.isEmpty()) {
+            System.out.println("⚠️ [DB] City not found: " + cityName);
+            return CityDTO.builder()
+                    .cityName(cityName)
+                    .error("City not found")
+                    .build();
+        }
+
+        CityInsight entity = optionalEntity.get();
 
         CityDTO dto = CityDTO.builder()
                 .id(entity.getId())
@@ -113,7 +128,11 @@ public class CityService {
                 .build();
 
         // 3️⃣ 캐시 저장
-        redisTemplate.opsForValue().set(key, dto);
+        try {
+            redisTemplate.opsForValue().set(key, dto);
+        } catch (Exception e) {
+            System.err.println("⚠️ [Redis 캐시 저장 실패] " + e.getMessage());
+        }
 
         return dto;
     }
@@ -137,6 +156,9 @@ public class CityService {
 
     private List<String> splitList(String s) {
         if (s == null || s.isBlank()) return List.of();
-        return Arrays.asList(s.split(","));
+        return Arrays.stream(s.split(","))
+                .map(String::trim)
+                .filter(str -> !str.isEmpty())
+                .collect(Collectors.toList());
     }
 }
