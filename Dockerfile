@@ -1,9 +1,10 @@
 FROM gradle:8.5-jdk21 AS builder
 WORKDIR /app
 COPY . .
-RUN chmod +x gradlew && ./gradlew :api:bootJar -x test
+RUN chmod +x gradlew && ./gradlew bootJar -x test
+
 FROM eclipse-temurin:21-jdk
 WORKDIR /app
-COPY --from=builder /app/api/build/libs/*.jar app.jar
+COPY --from=builder /app/build/libs/*.jar app.jar
 EXPOSE 8081
-ENTRYPOINT ["java","-jar","app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
