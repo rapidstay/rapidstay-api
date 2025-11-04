@@ -1,7 +1,9 @@
 package com.rapidstay.xap.api.controller;
 
+import com.rapidstay.xap.api.dto.CityInsightResponse;
 import com.rapidstay.xap.api.service.CityService;
 import com.rapidstay.xap.api.common.dto.CityDTO;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,5 +36,17 @@ public class CityController {
     @GetMapping
     public List<CityDTO> listAll() {
         return cityService.listAllCities();
+    }
+
+    /**
+     * 도시 목록 조회 (국가 필터용)
+     * 예: /api/cities/filter?country=대한민국
+     */
+    @GetMapping("/filter")
+    public ResponseEntity<List<CityInsightResponse>> getCities(
+            @RequestParam(required = false) String country) {
+
+        List<CityInsightResponse> cities = cityService.getCities(country);
+        return ResponseEntity.ok(cities);
     }
 }

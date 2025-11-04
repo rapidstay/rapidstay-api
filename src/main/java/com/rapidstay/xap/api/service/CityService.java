@@ -6,6 +6,7 @@ import com.rapidstay.xap.api.client.CityInfoClient;
 import com.rapidstay.xap.api.common.dto.CityDTO;
 import com.rapidstay.xap.api.common.entity.CityInsight;
 import com.rapidstay.xap.api.common.repository.CityInsightRepository;
+import com.rapidstay.xap.api.dto.CityInsightResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -160,5 +161,23 @@ public class CityService {
                 .map(String::trim)
                 .filter(str -> !str.isEmpty())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 전체 도시 또는 국가별 도시 목록 조회
+     */
+    public List<CityInsightResponse> getCities(String country) {
+        List<CityInsight> entities;
+
+        if (country != null && !country.isBlank()) {
+            // 기존 필드 그대로 사용
+            entities = cityInsightRepository.findByCountryIgnoreCase(country);
+        } else {
+            entities = cityInsightRepository.findAll();
+        }
+
+        return entities.stream()
+                .map(CityInsightResponse::fromEntity)
+                .toList();
     }
 }
