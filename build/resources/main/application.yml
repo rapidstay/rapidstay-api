@@ -28,11 +28,11 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      timeout: 60000
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 60s
+    ssl: false
 
 server:
   port: 8081
@@ -73,11 +73,14 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  data:
-    redis:
-      url: redis://red-d40ub0k9c44c73cdgu60:6379
-      timeout: 30000
-      connect-timeout: 10000
+  redis:
+    host: oregon-keyvalue.render.com
+    port: 6379
+    username: red-d40ub0k9c44c73cdgu60
+    password: eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY
+    ssl: true
+    timeout: 30s
+    connect-timeout: 10s
 
 server:
   port: 8081
@@ -91,7 +94,7 @@ logging:
 
 
 # ======================================================
-# 🚀 Prod (운영 / Upstash Redis)
+# 🚀 Prod (운영 / Render Redis 동일)
 # ======================================================
 ---
 spring:
@@ -114,11 +117,14 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  data:
-    redis:
-      url: redis://red-d40ub0k9c44c73cdgu60:6379
-      timeout: 30000
-      connect-timeout: 10000
+  redis:
+    host: oregon-keyvalue.render.com
+    port: 6379
+    username: red-d40ub0k9c44c73cdgu60
+    password: eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY
+    ssl: true
+    timeout: 30s
+    connect-timeout: 10s
 
 server:
   port: 8081
