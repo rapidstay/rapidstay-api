@@ -77,7 +77,7 @@ spring:
     redis:
       url: redis-cli --tls -u redis://default:AYFNAAIncDJmNWU2NDE2OTJlZWY0NzAwYWU5OTE0NzZmODc2MDNmNnAyMzMxMDE@premium-mongrel-33101.upstash.io:6379
       ssl:
-        enabled: true
+        enabled: false
       timeout: 10000
       connect-timeout: 5000
 
@@ -120,7 +120,7 @@ spring:
     redis:
       url: redis-cli --tls -u redis://default:AYFNAAIncDJmNWU2NDE2OTJlZWY0NzAwYWU5OTE0NzZmODc2MDNmNnAyMzMxMDE@premium-mongrel-33101.upstash.io:6379
       ssl:
-        enabled: true
+        enabled: false
       timeout: 10000
       connect-timeout: 5000
 
