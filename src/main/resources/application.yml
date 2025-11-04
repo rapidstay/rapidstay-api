@@ -5,7 +5,7 @@ spring:
     active: local
 
 # ======================================================
-# 🏠 Local (외부 SSL 접속 / 개발 PC)
+# 🏠 Local (개발 PC, 외부 SSL rediss)
 # ======================================================
 ---
 spring:
@@ -30,6 +30,8 @@ spring:
   data:
     redis:
       url: rediss://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@oregon-keyvalue.render.com:6379
+      ssl:
+        enabled: true
       timeout: 60s
       connect-timeout: 10s
 
@@ -49,7 +51,7 @@ web:
 
 
 # ======================================================
-# 🚧 Dev (Render 내부 / 개발 서버)
+# 🚧 Dev (Render 내부 개발 서버 — 내부망 우선, 외부 rediss 백업)
 # ======================================================
 ---
 spring:
@@ -74,7 +76,14 @@ spring:
 
   data:
     redis:
+      # 내부 연결 우선
       url: redis://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60:6379
+      # 내부 DNS 실패 시 외부 rediss 로 fallback (spring boot 3.2+ 지원)
+      sentinel:
+        master: external
+        nodes: oregon-keyvalue.render.com:6379
+      ssl:
+        enabled: false
       timeout: 30s
       connect-timeout: 10s
 
@@ -90,7 +99,7 @@ logging:
 
 
 # ======================================================
-# 🚀 Prod (Render 내부 / 운영 서버)
+# 🚀 Prod (Render 운영 서버 — 내부망 연결)
 # ======================================================
 ---
 spring:
@@ -116,6 +125,8 @@ spring:
   data:
     redis:
       url: redis://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60:6379
+      ssl:
+        enabled: false
       timeout: 30s
       connect-timeout: 10s
 
