@@ -51,7 +51,7 @@ web:
 
 
 # ======================================================
-# 🚧 Dev (Render 내부 개발 서버 — 내부망 우선, 외부 rediss 백업)
+# 🚧 Dev (Render 내부 개발 서버 — 내부망 우선)
 # ======================================================
 ---
 spring:
@@ -76,12 +76,8 @@ spring:
 
   data:
     redis:
-      # 내부 연결 우선
-      url: redis://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60:6379
-      # 내부 DNS 실패 시 외부 rediss 로 fallback (spring boot 3.2+ 지원)
-      sentinel:
-        master: external
-        nodes: oregon-keyvalue.render.com:6379
+      # ✅ 내부 연결 (Private Networking)
+      url: redis://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60.internal:6379
       ssl:
         enabled: false
       timeout: 30s
@@ -124,7 +120,8 @@ spring:
 
   data:
     redis:
-      url: redis://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60:6379
+      # ✅ 내부 연결 (운영용)
+      url: redis://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60.internal:6379
       ssl:
         enabled: false
       timeout: 30s
