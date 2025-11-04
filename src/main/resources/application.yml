@@ -5,7 +5,7 @@ spring:
     active: local
 
 # ======================================================
-# 🏠 Local
+# 🏠 Local (외부 SSL 접속 / 개발 PC)
 # ======================================================
 ---
 spring:
@@ -26,13 +26,12 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  redis:
-    host: localhost
-    port: 6379
-    timeout: 60s
-    ssl: false
+  data:
+    redis:
+      url: rediss://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@oregon-keyvalue.render.com:6379
+      timeout: 60s
+      connect-timeout: 10s
 
 server:
   port: 8081
@@ -50,7 +49,7 @@ web:
 
 
 # ======================================================
-# 🚧 Dev (Render / 개발서버)
+# 🚧 Dev (Render 내부 / 개발 서버)
 # ======================================================
 ---
 spring:
@@ -73,14 +72,11 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  redis:
-    host: oregon-keyvalue.render.com
-    port: 6379
-    username: red-d40ub0k9c44c73cdgu60
-    password: eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY
-    ssl: true
-    timeout: 30s
-    connect-timeout: 10s
+  data:
+    redis:
+      url: redis://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60:6379
+      timeout: 30s
+      connect-timeout: 10s
 
 server:
   port: 8081
@@ -94,7 +90,7 @@ logging:
 
 
 # ======================================================
-# 🚀 Prod (운영 / Render Redis 동일)
+# 🚀 Prod (Render 내부 / 운영 서버)
 # ======================================================
 ---
 spring:
@@ -117,14 +113,11 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  redis:
-    host: oregon-keyvalue.render.com
-    port: 6379
-    username: red-d40ub0k9c44c73cdgu60
-    password: eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY
-    ssl: true
-    timeout: 30s
-    connect-timeout: 10s
+  data:
+    redis:
+      url: redis://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60:6379
+      timeout: 30s
+      connect-timeout: 10s
 
 server:
   port: 8081
