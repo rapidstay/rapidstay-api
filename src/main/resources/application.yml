@@ -4,8 +4,10 @@ spring:
   profiles:
     active: local
 
+# ======================================================
+# 🏠 Local
+# ======================================================
 ---
-
 spring:
   config:
     activate:
@@ -13,7 +15,7 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://dpg-d44bbu3ipnbc73d2n6q0-a.oregon-postgres.render.com/rapidstay_db
+    url: jdbc:postgresql://dpg-d44bbu3ipnbc73d2n6q0-a.oregon-postgres.render.com:5432/rapidstay_db
     username: redshine75
     password: EKj5HOzXrKDY91Y4a5F4rQzDyyL5QWpR
 
@@ -28,8 +30,8 @@ spring:
 
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      host: localhost
+      port: 6379
       timeout: 60000
 
 server:
@@ -46,8 +48,10 @@ web:
   resources:
     add-mappings: false
 
+# ======================================================
+# 🚧 Dev (Render / 개발서버)
+# ======================================================
 ---
-
 spring:
   config:
     activate:
@@ -55,7 +59,7 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://dpg-d44bbu3ipnbc73d2n6q0-a.oregon-postgres.render.com/rapidstay_db
+    url: jdbc:postgresql://dpg-d44bbu3ipnbc73d2n6q0-a.oregon-postgres.render.com:5432/rapidstay_db
     username: redshine75
     password: EKj5HOzXrKDY91Y4a5F4rQzDyyL5QWpR
 
@@ -70,8 +74,8 @@ spring:
 
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      host: localhost
+      port: 6379
       timeout: 60000
 
 server:
@@ -84,8 +88,10 @@ logging:
     root: INFO
     com.rapidstay: DEBUG
 
+# ======================================================
+# 🚀 Prod (운영)
+# ======================================================
 ---
-
 spring:
   config:
     activate:
@@ -93,9 +99,9 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: ${DB_URL:jdbc:postgresql://dpg-d44bbu3ipnbc73d2n6q0-a.oregon-postgres.render.com/rapidstay_db}
-    username: ${DB_USERNAME:redshine75}
-    password: ${DB_PASSWORD:EKj5HOzXrKDY91Y4a5F4rQzDyyL5QWpR}
+    url: jdbc:postgresql://dpg-d44bbu3ipnbc73d2n6q0-a.oregon-postgres.render.com:5432/rapidstay_db
+    username: redshine75
+    password: EKj5HOzXrKDY91Y4a5F4rQzDyyL5QWpR
 
   jpa:
     hibernate:
@@ -108,8 +114,8 @@ spring:
 
   data:
     redis:
-      host: ${REDIS_HOST:redis-rapidstay.xap.internal}
-      port: ${REDIS_PORT:6379}
+      host: redis-rapidstay.xap.internal
+      port: 6379
       timeout: 60000
 
 server:
@@ -122,8 +128,10 @@ logging:
     root: INFO
     com.rapidstay: INFO
 
+# ======================================================
+# 🩺 Health Check (Render)
+# ======================================================
 ---
-
 management:
   endpoints:
     web:
