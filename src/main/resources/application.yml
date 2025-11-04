@@ -48,6 +48,7 @@ web:
   resources:
     add-mappings: false
 
+
 # ======================================================
 # 🚧 Dev (Render / 개발서버)
 # ======================================================
@@ -74,9 +75,10 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
-      timeout: 60000
+      url: rediss://default:1234@premium-mongrel-33101.upstash.io:6379
+      ssl: true
+      timeout: 10000
+      connect-timeout: 5000
 
 server:
   port: 8081
@@ -87,6 +89,7 @@ logging:
   level:
     root: INFO
     com.rapidstay: DEBUG
+
 
 # ======================================================
 # 🚀 Prod (운영 / Upstash Redis)
@@ -114,8 +117,10 @@ spring:
 
   data:
     redis:
-      url: rediss://default:********@premium-mongrel-33101.upstash.io:6379
-      timeout: 60000
+      url: rediss://default:1234@premium-mongrel-33101.upstash.io:6379
+      ssl: true
+      timeout: 10000
+      connect-timeout: 5000
 
 server:
   port: 8081
@@ -126,6 +131,7 @@ logging:
   level:
     root: INFO
     com.rapidstay: INFO
+
 
 # ======================================================
 # 🩺 Health Check (Render)
@@ -143,4 +149,4 @@ management:
       enabled: true
   health:
     redis:
-      enabled: true  # ✅ 이제 실제 Redis 연결 가능
+      enabled: true
