@@ -75,7 +75,7 @@ spring:
 
   data:
     redis:
-      url: redis://red-d40ub0k9c44c73cdgu60:6379
+      url: rediss://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@oregon-keyvalue.render.com:6379
       timeout: 30000
       connect-timeout: 10000
 
@@ -116,7 +116,7 @@ spring:
 
   data:
     redis:
-      url: redis://red-d40ub0k9c44c73cdgu60:6379
+      url: rediss://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@oregon-keyvalue.render.com:6379
       timeout: 30000
       connect-timeout: 10000
 
