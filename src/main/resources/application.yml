@@ -136,7 +136,12 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health, info
   endpoint:
     health:
       show-details: never
+    info:
+      enabled: true
+  health:
+    redis:
+      enabled: false  # ✅ Redis 미연결 시에도 서비스 상태 DOWN 되지 않음
