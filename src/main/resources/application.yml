@@ -89,7 +89,7 @@ logging:
     com.rapidstay: DEBUG
 
 # ======================================================
-# 🚀 Prod (운영)
+# 🚀 Prod (운영 / Upstash Redis)
 # ======================================================
 ---
 spring:
@@ -114,8 +114,7 @@ spring:
 
   data:
     redis:
-      host: redis-rapidstay.xap.internal
-      port: 6379
+      url: rediss://default:********@premium-mongrel-33101.upstash.io:6379
       timeout: 60000
 
 server:
@@ -144,4 +143,4 @@ management:
       enabled: true
   health:
     redis:
-      enabled: false  # ✅ Redis 미연결 시에도 서비스 상태 DOWN 되지 않음
+      enabled: true  # ✅ 이제 실제 Redis 연결 가능
