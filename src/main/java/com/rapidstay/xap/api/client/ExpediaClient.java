@@ -40,7 +40,6 @@ public class ExpediaClient {
                     + "&language=ko-KR"
                     + "&currency=KRW";
 
-            // ✅ 헤더 구성
             HttpHeaders headers = new HttpHeaders();
             headers.set("Accept", "application/json");
             headers.set("Api-Key", expediaApiKey);
@@ -80,6 +79,41 @@ public class ExpediaClient {
 
         } catch (Exception e) {
             System.err.println("❌ Expedia API 요청 실패: " + e.getMessage());
+            return List.of();
+        }
+    }
+
+    /**
+     * ✅ 신규 추가 — hotelIds 기반 조회 (멀티 쓰레드 호출용)
+     */
+    public List<HotelResponse> searchHotelsByIds(List<Long> hotelIds, String checkIn, String checkOut, List<HotelSearchRequest.RoomInfo> rooms) {
+        if (hotelIds == null || hotelIds.isEmpty()) {
+            System.err.println("⚠️ hotelIds 가 비어있습니다 — 요청 생략");
+            return List.of();
+        }
+
+        try {
+            System.out.println("🌐 Expedia API (ID 목록) 요청: " + hotelIds.size() + "개");
+
+            // 실제 API 호출 시에는 hotelIds를 파라미터로 전송
+            // 현재는 Mock 데이터로 대체
+            List<HotelResponse> results = new ArrayList<>();
+            for (Long id : hotelIds) {
+                results.add(HotelResponse.builder()
+                        .id(id)
+                        .name("Mock Hotel " + id)
+                        .city("Sample City")
+                        .rating(4.2)
+                        .latitude(37.5665)
+                        .longitude(126.9780)
+                        .build());
+            }
+
+            System.out.println("🏨 Expedia 호텔(Mock) 파싱 완료: " + results.size() + "개");
+            return results;
+
+        } catch (Exception e) {
+            System.err.println("❌ Expedia API (ID) 요청 실패: " + e.getMessage());
             return List.of();
         }
     }

@@ -6,12 +6,22 @@ import com.rapidstay.xap.api.dto.HotelResponse;
 import com.rapidstay.xap.api.dto.HotelSearchRequest;
 import com.rapidstay.xap.api.dto.PagedResult;
 import com.rapidstay.xap.api.common.dto.CityDTO;
+import com.rapidstay.xap.api.common.repository.SupplierHotelRepository;
+import com.rapidstay.xap.api.common.repository.MasterHotelRepository;
+import com.rapidstay.xap.api.common.repository.MasterCityRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
+/**
+ * RapidStay Hotel Service
+ * - 기존: 도시명 기반 단일 스레드 검색
+ * - 개선: cityId + cityType 기반 병렬(공급사별) 검색
+ */
 @Service
 @RequiredArgsConstructor
 public class HotelService {
@@ -19,36 +29,100 @@ public class HotelService {
     private final ExpediaClient expediaClient;
     private final CityService cityService;
 
+    // ✅ 신규 DB Repository (공급사/매핑 조회용)
+    private final MasterCityRepository masterCityRepository;
+    private final MasterHotelRepository masterHotelRepository;
+    private final SupplierHotelRepository supplierHotelRepository;
+
     @Value("${rapidstay.mock.enabled:true}")
     private boolean useMock;
 
     /**
-     * ✅ 도시명 → 좌표 변환 후 호텔 목록 조회 + 페이징
+     * ✅ 도시명 → 좌표 변환 후 호텔 목록 조회 + 페이징 (기존 유지)
      */
     public PagedResult<HotelResponse> searchHotels(HotelSearchRequest req) {
-        // 1️⃣ 도시 정보 조회 (DB/Redis)
         CityDTO city = cityService.getCityInfo(req.getCity());
         if (city == null)
             throw new RuntimeException("City not found: " + req.getCity());
 
-        // 2️⃣ Expedia 검색 호출 — 도시명 or 좌표 기반
         List<HotelResponse> allHotels = expediaClient.searchHotelsByRegion(
-                city.getCityName(), // 도시명 사용
+                city.getCityName(),
                 req.getCheckIn(),
                 req.getCheckOut(),
                 req.getRooms()
         );
 
-        // 3️⃣ 페이징 처리
-        int totalCount = allHotels.size();
-        int page = Math.max(1, req.getPage());
-        int pageSize = Math.max(1, req.getPageSize());
-        int start = (page - 1) * pageSize;
-        int end = Math.min(start + pageSize, totalCount);
+        return buildPagedResult(allHotels, req.getPage(), req.getPageSize());
+    }
 
-        List<HotelResponse> pagedHotels = allHotels.subList(start, end);
+    /**
+     * ✅ cityId + cityType 기반 병렬 검색 (신규 추가)
+     */
+    public PagedResult<HotelResponse> searchHotelsByCityId(Long cityId, String cityType, HotelSearchRequest req) {
+        System.out.println("🚀 [HotelService] cityId 기반 병렬 검색 시작: cityId=" + cityId + ", cityType=" + cityType);
 
-        return new PagedResult<>(page, pageSize, totalCount, pagedHotels);
+        // 1️⃣ cityType 에 따라 검색 기준 테이블 결정
+        List<Long> masterHotelIds = switch (cityType == null ? "city" : cityType.toLowerCase()) {
+            case "city" -> masterHotelRepository.findIdsByCityId(cityId);
+            case "hotel" -> List.of(cityId); // 단일 호텔 직접 지정
+            default -> new ArrayList<>();
+        };
+
+        if (masterHotelIds.isEmpty()) {
+            System.out.println("⚠️ [HotelService] No hotels found for cityId=" + cityId);
+            return new PagedResult<>(1, req.getPageSize(), 0, List.of());
+        }
+
+        // 2️⃣ 매핑 테이블 통해 supplier_hotel ID 목록 확보
+        List<Long> supplierHotelIds = supplierHotelRepository.findIdsByMasterHotelIds(masterHotelIds);
+        if (supplierHotelIds.isEmpty()) {
+            System.out.println("⚠️ [HotelService] No supplier hotels mapped for master_hotel_ids=" + masterHotelIds.size());
+            return new PagedResult<>(1, req.getPageSize(), 0, List.of());
+        }
+
+        // 3️⃣ 병렬 호출 준비
+        int batchSize = 100;
+        ExecutorService executor = Executors.newFixedThreadPool(Math.min(10, (supplierHotelIds.size() / batchSize) + 1));
+        List<CompletableFuture<List<HotelResponse>>> futures = new ArrayList<>();
+
+        for (int i = 0; i < supplierHotelIds.size(); i += batchSize) {
+            int start = i;
+            int end = Math.min(i + batchSize, supplierHotelIds.size());
+            List<Long> batch = supplierHotelIds.subList(start, end);
+
+            CompletableFuture<List<HotelResponse>> future = CompletableFuture.supplyAsync(() -> {
+                try {
+                    return expediaClient.searchHotelsByIds(batch, req.getCheckIn(), req.getCheckOut(), req.getRooms());
+                } catch (Exception e) {
+                    System.err.println("❌ [Expedia] 병렬 호출 실패 (" + start + "~" + end + "): " + e.getMessage());
+                    return List.of();
+                }
+            }, executor);
+            futures.add(future);
+        }
+
+        // 4️⃣ 결과 병합
+        List<HotelResponse> allResults = futures.stream()
+                .map(CompletableFuture::join)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+
+        executor.shutdown();
+
+        System.out.println("✅ [HotelService] Expedia 호출 완료: 총 " + allResults.size() + "건");
+
+        return buildPagedResult(allResults, req.getPage(), req.getPageSize());
+    }
+
+    /** ✅ 페이징 공통 처리 */
+    private PagedResult<HotelResponse> buildPagedResult(List<HotelResponse> all, int page, int size) {
+        int total = all.size();
+        int pageNo = Math.max(1, page);
+        int pageSize = Math.max(1, size);
+        int start = (pageNo - 1) * pageSize;
+        int end = Math.min(start + pageSize, total);
+        List<HotelResponse> list = total > 0 ? all.subList(start, end) : List.of();
+        return new PagedResult<>(pageNo, pageSize, total, list);
     }
 
     /** ✅ 호텔 목록만 필요할 때 */
@@ -63,21 +137,18 @@ public class HotelService {
                                               String checkOut,
                                               List<HotelSearchRequest.RoomInfo> rooms) {
 
-        // 도시 정보 조회
         CityDTO cityInfo = cityService.getCityInfo(city);
         if (cityInfo == null)
             throw new RuntimeException("City not found: " + city);
 
-        // 요청 객체 구성
         HotelSearchRequest req = new HotelSearchRequest();
         req.setCity(city);
         req.setCheckIn(checkIn);
         req.setCheckOut(checkOut);
         req.setRooms(rooms);
         req.setPage(1);
-        req.setPageSize(100); // 기본 100개만 로드
+        req.setPageSize(100);
 
-        // 호텔 목록에서 해당 ID 찾기
         List<HotelResponse> results = searchHotelsWithRooms(req);
         HotelResponse base = results.stream()
                 .filter(h -> String.valueOf(h.getId()).equals(hotelId))
@@ -86,19 +157,14 @@ public class HotelService {
 
         if (base == null) return null;
 
-        // ✅ 상세 Mock 데이터 (나중에 Expedia 연동 시 교체)
         return HotelDetailResponse.builder()
                 .id(base.getId())
                 .name(base.getName())
                 .address(base.getAddress())
                 .city(base.getCity())
                 .rating(base.getRating())
-                .latitude(
-                        Double.isNaN(base.getLatitude()) ? cityInfo.getLat() : base.getLatitude()
-                )
-                .longitude(
-                        Double.isNaN(base.getLongitude()) ? cityInfo.getLon() : base.getLongitude()
-                )
+                .latitude(Double.isNaN(base.getLatitude()) ? cityInfo.getLat() : base.getLatitude())
+                .longitude(Double.isNaN(base.getLongitude()) ? cityInfo.getLon() : base.getLongitude())
                 .description("이 호텔은 Mock 데이터 기반이며 Expedia 연동 시 실제 데이터로 교체됩니다.")
                 .images(List.of(
                         "https://picsum.photos/seed/" + base.getName() + "/800/400",

@@ -1,14 +1,13 @@
 package com.rapidstay.xap.api.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rapidstay.xap.api.client.CityInfoClient;
 import com.rapidstay.xap.api.common.dto.CityDTO;
 import com.rapidstay.xap.api.common.entity.CityInsight;
+import com.rapidstay.xap.api.common.entity.SearchIndex;
 import com.rapidstay.xap.api.common.repository.CityInsightRepository;
+import com.rapidstay.xap.api.common.repository.SearchIndexRepository;
 import com.rapidstay.xap.api.dto.CityInsightResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -19,72 +18,52 @@ import java.util.stream.Collectors;
 public class CityService {
 
     private final CityInfoClient cityInfoClient;
-    private final RedisTemplate<String, CityDTO> redisTemplate;
     private final CityInsightRepository cityInsightRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final SearchIndexRepository searchIndexRepository;
 
-    /** 🔍 도시명 자동완성 (Redis → DB fallback) */
+    /** 🔍 도시명 자동완성 (search_index 기반) */
     public List<Map<String, Object>> suggestCities(String keyword) {
         if (keyword == null || keyword.isBlank()) return Collections.emptyList();
         String lower = keyword.toLowerCase();
 
         System.out.println("🔍 [CityService] 검색어: " + keyword + " (lower=" + lower + ")");
+        System.out.println("🔎 [DB: search_index] 검색 실행 중...");
 
-        try {
-            String json = redisTemplate.getConnectionFactory() != null
-                    ? new org.springframework.data.redis.core.StringRedisTemplate(redisTemplate.getConnectionFactory())
-                    .opsForValue().get("city:list")
-                    : null;
-
-            if (json != null && !json.isBlank()) {
-                System.out.println("🧠 [Redis] city:list 존재함, 길이: " + json.length());
-
-                List<CityDTO> cachedList = objectMapper.readValue(json, new TypeReference<List<CityDTO>>() {});
-
-                List<Map<String, Object>> results = cachedList.stream()
-                        .filter(c ->
-                                (c.getCityName() != null && c.getCityName().toLowerCase().contains(lower)) ||
-                                        (c.getCityNameKr() != null && c.getCityNameKr().contains(keyword)))
-                        .limit(10)
-                        .map(c -> {
-                            Map<String, Object> map = new HashMap<>();
-                            map.put("id", c.getId());
-                            map.put("cityName", c.getCityName());
-                            map.put("cityNameKr", c.getCityNameKr());
-                            return map;
-                        })
-                        .collect(Collectors.toList());
-
-                System.out.println("✅ [Redis 결과] " + results.size() + "건 매칭됨");
-                return results;
-            } else {
-                System.out.println("⚠️ [Redis] city:list 없음 또는 비어있음");
-            }
-        } catch (Exception e) {
-            System.err.println("❌ [Redis 검색 실패] " + e.getMessage());
+        // 1️⃣ 자모 검색 우선 (한글 분리형 검색 지원)
+        List<SearchIndex> matches;
+        if (keyword.matches(".*[ㄱ-ㅎㅏ-ㅣ].*")) {
+            matches = searchIndexRepository.findByJamo(keyword);
+        } else {
+            // 2️⃣ 일반 검색: 도시(entity_type='city')만 필터링
+            matches = searchIndexRepository.findAll().stream()
+                    .filter(c -> "city".equalsIgnoreCase(c.getEntityType()))
+                    .filter(c ->
+                            (c.getNameEn() != null && c.getNameEn().toLowerCase().contains(lower)) ||
+                                    (c.getNameKr() != null && c.getNameKr().contains(keyword)) ||
+                                    (c.getNormalized() != null && c.getNormalized().toLowerCase().contains(lower)))
+                    .sorted(Comparator.comparingDouble((SearchIndex c) ->
+                            c.getPopularity() != null ? -c.getPopularity() : 0))
+                    .limit(20)
+                    .toList();
         }
 
-        // ✅ DB fallback
-        System.out.println("🔁 [DB fallback] 실행 중...");
-        List<Map<String, Object>> dbResults = cityInsightRepository.findAll().stream()
-                .filter(c ->
-                        (c.getCityName() != null && c.getCityName().toLowerCase().contains(lower)) ||
-                                (c.getCityNameKr() != null && c.getCityNameKr().contains(keyword)))
-                .limit(10)
+        // 3️⃣ 결과 변환
+        List<Map<String, Object>> results = matches.stream()
                 .map(c -> {
                     Map<String, Object> map = new HashMap<>();
-                    map.put("id", c.getId());
-                    map.put("cityName", c.getCityName());
-                    map.put("cityNameKr", c.getCityNameKr());
+                    map.put("id", c.getEntityId());
+                    map.put("cityName", c.getNameEn());
+                    map.put("cityNameKr", c.getNameKr());
+                    map.put("countryCode", c.getCountryCode());
                     return map;
                 })
                 .collect(Collectors.toList());
 
-        System.out.println("✅ [DB 결과] " + dbResults.size() + "건 매칭됨");
-        return dbResults;
+        System.out.println("✅ [search_index 결과] " + results.size() + "건 매칭됨");
+        return results;
     }
 
-    /** 🧭 Redis + DB 조회 (데이터 없을 때 빈 DTO 반환) */
+    /** 🧭 DB 조회 (데이터 없을 때 빈 DTO 반환) */
     public CityDTO getCityInfo(String cityName) {
         if (cityName == null || cityName.isBlank()) {
             return CityDTO.builder()
@@ -93,17 +72,6 @@ public class CityService {
                     .build();
         }
 
-        String key = "city:" + cityName.toLowerCase();
-
-        // 1️⃣ 캐시 확인
-        try {
-            CityDTO cached = redisTemplate.opsForValue().get(key);
-            if (cached != null) return cached;
-        } catch (Exception e) {
-            System.err.println("⚠️ [Redis 조회 실패] " + e.getMessage());
-        }
-
-        // 2️⃣ DB 조회
         Optional<CityInsight> optionalEntity = cityInsightRepository.findByCityNameIgnoreCase(cityName);
 
         if (optionalEntity.isEmpty()) {
@@ -116,7 +84,7 @@ public class CityService {
 
         CityInsight entity = optionalEntity.get();
 
-        CityDTO dto = CityDTO.builder()
+        return CityDTO.builder()
                 .id(entity.getId())
                 .cityName(entity.getCityName())
                 .cityNameKr(entity.getCityNameKr())
@@ -127,15 +95,6 @@ public class CityService {
                 .lon(entity.getLon())
                 .error(null)
                 .build();
-
-        // 3️⃣ 캐시 저장
-        try {
-            redisTemplate.opsForValue().set(key, dto);
-        } catch (Exception e) {
-            System.err.println("⚠️ [Redis 캐시 저장 실패] " + e.getMessage());
-        }
-
-        return dto;
     }
 
     /** 🌍 전체 도시 리스트 */
@@ -170,7 +129,6 @@ public class CityService {
         List<CityInsight> entities;
 
         if (country != null && !country.isBlank()) {
-            // 기존 필드 그대로 사용
             entities = cityInsightRepository.findByCountryIgnoreCase(country);
         } else {
             entities = cityInsightRepository.findAll();
