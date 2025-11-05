@@ -30,6 +30,8 @@ spring:
   data:
     redis:
       url: rediss://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@oregon-keyvalue.render.com:6379
+      ssl:
+        enabled: true
       timeout: 60s
       connect-timeout: 10s
 
@@ -49,7 +51,7 @@ web:
 
 
 # ======================================================
-# 🚧 Dev (Render 내부 개발 서버 — 내부망 rediss)
+# 🚧 Dev (Render 내부 개발 서버 — 내부망 우선)
 # ======================================================
 ---
 spring:
@@ -74,7 +76,10 @@ spring:
 
   data:
     redis:
-      url: rediss://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60.internal:6379
+      # ✅ 내부 연결 (Private Networking)
+      url: redis://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60.internal:6379
+      ssl:
+        enabled: false
       timeout: 30s
       connect-timeout: 10s
 
@@ -90,7 +95,7 @@ logging:
 
 
 # ======================================================
-# 🚀 Prod (Render 운영 서버 — 내부망 rediss)
+# 🚀 Prod (Render 운영 서버 — 내부망 연결)
 # ======================================================
 ---
 spring:
@@ -115,7 +120,10 @@ spring:
 
   data:
     redis:
-      url: rediss://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60.internal:6379
+      # ✅ 내부 연결 (운영용)
+      url: redis://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60.internal:6379
+      ssl:
+        enabled: false
       timeout: 30s
       connect-timeout: 10s
 
@@ -146,4 +154,4 @@ management:
       enabled: true
   health:
     redis:
-      enabled: true
+      enabled: false
