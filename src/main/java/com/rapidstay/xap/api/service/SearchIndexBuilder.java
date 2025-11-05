@@ -4,6 +4,9 @@ import com.rapidstay.xap.api.common.entity.SearchIndex;
 import com.rapidstay.xap.api.common.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.rapidstay.xap.api.common.entity.Transport;
+
+
 
 import java.math.BigDecimal;
 import java.util.*;
