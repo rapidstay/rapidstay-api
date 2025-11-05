@@ -17,7 +17,18 @@ public class SearchIndexService {
     public List<Map<String, Object>> search(String query) {
         if (query == null || query.trim().length() < 2) return List.of();
         String normalized = normalize(query);
-        return repository.searchIndexed(normalized);
+
+        return repository.findByJamo(normalized).stream()
+                .map(s -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", s.getId());
+                    map.put("nameKr", s.getNameKr());
+                    map.put("nameEn", s.getNameEn());
+                    map.put("entityType", s.getEntityType());
+                    map.put("entityId", s.getEntityId());
+                    return map;
+                })
+                .toList();
     }
 
     /** 색인 재빌드 (batch→API 호출용) */
