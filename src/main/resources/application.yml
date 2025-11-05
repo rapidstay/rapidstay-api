@@ -75,7 +75,7 @@ spring:
   data:
     redis:
       # ✅ Render 내부망 연결 (Private Networking)
-      url: redis://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60:6379
+      url: redis://:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60:6379
       timeout: 30s
       connect-timeout: 10s
 
@@ -117,7 +117,7 @@ spring:
   data:
     redis:
       # ✅ Render 내부망 연결 (운영용)
-      url: redis://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60:6379
+      url: redis://:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60:6379
       timeout: 30s
       connect-timeout: 10s
 
