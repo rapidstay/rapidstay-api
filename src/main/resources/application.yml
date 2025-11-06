@@ -49,7 +49,7 @@ web:
 
 
 # ======================================================
-# 🚧 Dev (Render 내부 개발 서버 — 내부망 연결)
+# 🚧 Dev (Render 내부 개발 서버 — 내부망 연결, Starter Redis)
 # ======================================================
 ---
 spring:
@@ -74,8 +74,9 @@ spring:
 
   data:
     redis:
-      # ✅ Render 내부망 연결 (Private Networking)
-      url: redis://:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60:6379
+      # ✅ Render Starter Redis (TLS required)
+      url: rediss://:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60.internal:6379
+      ssl: true
       timeout: 30s
       connect-timeout: 10s
 
@@ -91,7 +92,7 @@ logging:
 
 
 # ======================================================
-# 🚀 Prod (Render 운영 서버 — 내부망 연결)
+# 🚀 Prod (Render 운영 서버 — 내부망 연결, Starter Redis)
 # ======================================================
 ---
 spring:
@@ -116,8 +117,9 @@ spring:
 
   data:
     redis:
-      # ✅ Render 내부망 연결 (운영용)
-      url: redis://:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60:6379
+      # ✅ Render Starter Redis (TLS required)
+      url: rediss://:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60.internal:6379
+      ssl: true
       timeout: 30s
       connect-timeout: 10s
 
