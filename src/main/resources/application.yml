@@ -76,7 +76,6 @@ spring:
     redis:
       # ✅ Render Starter Redis (TLS required)
       url: rediss://:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60.internal:6379
-      ssl: true
       timeout: 30s
       connect-timeout: 10s
 
@@ -119,7 +118,6 @@ spring:
     redis:
       # ✅ Render Starter Redis (TLS required)
       url: rediss://:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60.internal:6379
-      ssl: true
       timeout: 30s
       connect-timeout: 10s
 
