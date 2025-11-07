@@ -74,7 +74,11 @@ spring:
 
   data:
     redis:
-      url: redis://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60:6379
+      host: red-d40ub0k9c44c73cdgu60
+      port: 6379
+      password: eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY
+      ssl:
+        enabled: false   # ✅ 이게 진짜 적용됨
       timeout: 30s
       connect-timeout: 10s
 
@@ -115,7 +119,11 @@ spring:
 
   data:
     redis:
-      url: redis://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@red-d40ub0k9c44c73cdgu60:6379
+      host: red-d40ub0k9c44c73cdgu60
+      port: 6379
+      password: eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY
+      ssl:
+        enabled: false   # ✅ 이게 진짜 적용됨
       timeout: 30s
       connect-timeout: 10s
 
