@@ -30,7 +30,7 @@ spring:
   data:
     redis:
       url: rediss://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@oregon-keyvalue.render.com:6379
-      timeout: 60s
+      timeout: 5s
       connect-timeout: 10s
 
 server:
@@ -74,12 +74,8 @@ spring:
 
   data:
     redis:
-      host: red-d40ub0k9c44c73cdgu60
-      port: 6379
-      password: eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY
-      ssl:
-        enabled: false   # ✅ 이게 진짜 적용됨
-      timeout: 30s
+      url: rediss://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@oregon-keyvalue.render.com:6379
+      timeout: 5s
       connect-timeout: 10s
 
 server:
@@ -119,12 +115,8 @@ spring:
 
   data:
     redis:
-      host: red-d40ub0k9c44c73cdgu60
-      port: 6379
-      password: eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY
-      ssl:
-        enabled: false   # ✅ 이게 진짜 적용됨
-      timeout: 30s
+      url: rediss://red-d40ub0k9c44c73cdgu60:eCCiLBqjN0WLXOQrEzDZahZ3dhTm1PkY@oregon-keyvalue.render.com:6379
+      timeout: 5s
       connect-timeout: 10s
 
 server:
