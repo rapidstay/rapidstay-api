@@ -40,10 +40,10 @@ public class SearchIndex {
     @Column(name = "popularity")
     private Double popularity; // 평점/조회수 기반 점수
 
-    @Column(name = "search_vector", columnDefinition = "tsvector", insertable = false, updatable = false)
-    private String searchVector; // PostgreSQL 전용
+    // ✅ H2에서는 "text"로 처리하고, PostgreSQL에서는 "tsvector"로 동작하도록 안전하게 선언
+    @Column(name = "search_vector", columnDefinition = "text", insertable = false, updatable = false)
+    private String searchVector;
 
     @Column(name = "decomposed_jamo")
     private String decomposedJamo;
-
 }

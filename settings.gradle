@@ -9,4 +9,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "rapidstay-api"
+rootProject.name = 'staypick-api'
